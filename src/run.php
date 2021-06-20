@@ -105,11 +105,13 @@ $sieteLimones = [
 
 //D: pero Filis, esos limones están sucios!!! te has olivado de la pandemia?? hay q limpiar los limones con agua!! de momento lo q veo q nuestro mecanismo de limpieza es un poco cutre,
 
+
+// externs dep
 class CuboDeAgua
 {
     public int $unidades = 50;
 }
-
+// tipoc comun comun representado dep state change y resultado
 class TupleDeCuboDeAguaYLimon
 {
     private CuboDeAgua $cuboDeAgua;
@@ -132,44 +134,64 @@ class TupleDeCuboDeAguaYLimon
     }
 }
 
-$limpiar = function(CuboDeAgua $cuboDeAgua): callable {
-    return function (Limon $unLimon) use($cuboDeAgua) {
-        $limonPelado = clone $unLimon;
-        $limonPelado->estaLimpio = true;
 
-
-        $cuboDeAguaConUnaUnidadMenos = clone $cuboDeAgua;
-        $cuboDeAguaConUnaUnidadMenos->unidades--;
-        return new TupleDeCuboDeAguaYLimon($cuboDeAgua, $limonPelado);
-//        return $limonPelado;
-    };
+$limpiar = function(Limon $unLimon): Limon {
+    $limonPelado = clone $unLimon;
+    $limonPelado->estaLimpio = true;
+    return $limonPelado;
 };
-
+// funciones de primer orden
 $pelar = function(Limon $unLimon): Limon {
     $limonPelado = clone $unLimon;
     $limonPelado->estaPelado = true;
     return $limonPelado;
 };
 
-$pelarMasListoCabron = function(TupleDeCuboDeAguaYLimon $tuple) use($pelar) {
-    return new TupleDeCuboDeAguaYLimon($tuple->cuboDeAgua(), $pelar($tuple->limon()));
-};
-
-$compose = function(callable $a, callable $b) {
-    return function($args) use($a, $b) {
-        return $b($a($args));
+// funcion de super order - combinador
+// F: bueno, vamos a crear un combinador que nos permite componer dos funciones que para el caso, solo acepta un parametro, pero que nos sirve y ademas es muy simple.
+function componerDosFuncionesConUnSoloParametro(callable $a, callable $b) {
+    return function($parametro) use($a, $b) {
+        return $b($a($parametro));
     };
 };
 
-$cuboDeAgua = new CuboDeAgua();
-$limpiarYpelar = $compose($limpiar($cuboDeAgua), $pelarMasListoCabron);
-//$limpiarYpelar = $compose($limpiar($cuboDeAgua), $pelar);
+function componerDosFuncionesConUnSoloParametroDondeElParametroSonLimons(callable $a, callable $b) {
+    return function(Limon $parametro) use($a, $b): Limon {
+        $result = $b($a($parametro));
+        return $result;
+    };
+};
+
+function componerDosFuncionesConUnSoloParametroConUnGeneric($generic, callable $a, callable $b) {
+    return function($parametro) use($a, $b) {
+        AssertThat($parametro)->is($generic);
+
+        $result = $b($a($parametro));
+        AssertThat($result)->is($generic);
+        return $result;
+    };
+};
+
+// F: filis comenta version alterativa adhoc, esto es una función lambda que compone limpiar y pelar en una sola función pero no la ejecuta. Además en php8 nos ahorramos todo ese boilerplate que teniamos en php7.
+//$limpiarYpelarAdHoc = fn(Limon $elLimon) => $pelar($limpiar($elLimon));
+//$limpiarYpelarAdHoc = function(Limon $elLimon) use($pelar, $limpiar) {
+//    return $pelar($limpiar($elLimon));
+//};
+
+$limpiarYpelar = componerDosFuncionesConUnSoloParametro(Limon::class, $limpiar, $pelar);
 
 $limonesLimpiosYpelados = array_map($limpiarYpelar, $sieteLimones);
 
 var_dump($limonesLimpiosYpelados);
+
+//
+
 //FIN.
 
 
 //$limonesLimpiados = array_map($limpiar, $sieteLimones);
 //$limonesPeladosYlimpios = array_map($pelar, $limonesLimpiados);
+
+
+
+
