@@ -105,41 +105,12 @@ $sieteLimones = [
 
 //D: pero Filis, esos limones están sucios!!! te has olivado de la pandemia?? hay q limpiar los limones con agua!! de momento lo q veo q nuestro mecanismo de limpieza es un poco cutre,
 
-
-// externs dep
-class CuboDeAgua
-{
-    public int $unidades = 50;
-}
-// tipoc comun comun representado dep state change y resultado
-class TupleDeCuboDeAguaYLimon
-{
-    private CuboDeAgua $cuboDeAgua;
-    private Limon $limon;
-
-    public function __construct(CuboDeAgua $cuboDeAgua, Limon $limon)
-    {
-        $this->cuboDeAgua = $cuboDeAgua;
-        $this->limon = $limon;
-    }
-
-    public function limon(): Limon
-    {
-        return $this->limon;
-    }
-
-    public function cuboDeAgua(): CuboDeAgua
-    {
-        return $this->cuboDeAgua;
-    }
-}
-
-
 $limpiar = function(Limon $unLimon): Limon {
     $limonPelado = clone $unLimon;
     $limonPelado->estaLimpio = true;
     return $limonPelado;
 };
+
 // funciones de primer orden
 $pelar = function(Limon $unLimon): Limon {
     $limonPelado = clone $unLimon;
@@ -149,26 +120,9 @@ $pelar = function(Limon $unLimon): Limon {
 
 // funcion de super order - combinador
 // F: bueno, vamos a crear un combinador que nos permite componer dos funciones que para el caso, solo acepta un parametro, pero que nos sirve y ademas es muy simple.
-function componerDosFuncionesConUnSoloParametro(callable $a, callable $b) {
+function componer(callable $a, callable $b) {
     return function($parametro) use($a, $b) {
         return $b($a($parametro));
-    };
-};
-
-function componerDosFuncionesConUnSoloParametroDondeElParametroSonLimons(callable $a, callable $b) {
-    return function(Limon $parametro) use($a, $b): Limon {
-        $result = $b($a($parametro));
-        return $result;
-    };
-};
-
-function componerDosFuncionesConUnSoloParametroConUnGeneric($generic, callable $a, callable $b) {
-    return function($parametro) use($a, $b) {
-        AssertThat($parametro)->is($generic);
-
-        $result = $b($a($parametro));
-        AssertThat($result)->is($generic);
-        return $result;
     };
 };
 
@@ -178,20 +132,96 @@ function componerDosFuncionesConUnSoloParametroConUnGeneric($generic, callable $
 //    return $pelar($limpiar($elLimon));
 //};
 
-$limpiarYpelar = componerDosFuncionesConUnSoloParametro(Limon::class, $limpiar, $pelar);
+$limpiarYpelar = componer($limpiar, $pelar);
 
-$limonesLimpiosYpelados = array_map($limpiarYpelar, $sieteLimones);
+// F: bueno Dawid, hemos limpiado y peleado, y ahora... lo vamos a exprimir??
+// D: ¡Hombre! si queremos limonada, hay que darlo!
 
-var_dump($limonesLimpiosYpelados);
-
-//
-
-//FIN.
-
-
-//$limonesLimpiados = array_map($limpiar, $sieteLimones);
-//$limonesPeladosYlimpios = array_map($pelar, $limonesLimpiados);
+interface Unidad {};
+final class Mililitro implements Unidad {};
 
 
 
+$exprimir = function(Limon $unLimon): Jugo {
+    return new Jugo(50, new Mililitro());
+};
 
+$limpiarYpelarYexprimir = componer($limpiarYpelar, $exprimir);
+
+// ejeucion
+$jugos = array_map($limpiarYpelarYexprimir, $sieteLimones);
+
+$sumarJugos = fn(Jugo $j1, Jugo $j2): Jugo => new Jugo(
+    cantidad: $j1->cantidad() + $j2->cantidad(),
+    unidad:   $j1->unidad()
+);
+
+$todoElJugoDelLimones = array_reduce(
+    $jugos,
+    fn(Jugo $jugoAcumulado, Jugo $jugo) => $sumarJugos($jugoAcumulado, $jugo),
+    Jugo::vacio(new Mililitro())
+);
+
+// F: ¿Quieres azúcar? D: noooo!
+// F : Y hielo
+// D : pues los dos cubos , porfa
+// F: y hierba D: queee sí
+
+$limonada = new Limonada(
+    base: $todoElJugoDelLimones,
+    tieneAzucar :false,
+    cubosHielo : 2,
+    hierbaBuena : true
+);
+var_dump($limonada);
+
+// FIN.
+
+
+abstract class Liquido
+{
+    private int $cantidad;
+    private Unidad $unidad;
+
+    public function __construct(int $cantidad, Unidad $unidad)
+    {
+        $this->cantidad = $cantidad;
+        $this->unidad = $unidad;
+    }
+
+    public function cantidad(): int
+    {
+        return $this->cantidad;
+    }
+
+    public function unidad(): Unidad
+    {
+        return $this->unidad;
+    }
+
+    public static function vacio(Unidad $unidad): self // F: Dawid, y Monoid este ?
+    {
+        return new static(0, $unidad);
+    }
+}
+final class Agua extends Liquido {}
+final class Jugo extends Liquido {}
+
+
+class Limonada
+{
+    public Jugo $base;
+    public Agua $agua;
+    public bool $tieneAzucar = false;
+    public int $cubosHielo = 0;
+    public bool $hierbaBuena = false;
+
+    public function __construct(Jugo $base, bool $tieneAzucar, int $cubosHielo, bool $hierbaBuena)
+    {
+        $this->agua = new Agua(cantidad: 100, unidad: new Mililitro());
+        $this->base = $base;
+        $this->tieneAzucar = $tieneAzucar;
+        $this->cubosHielo = $cubosHielo;
+        $this->hierbaBuena = $hierbaBuena;
+    }
+}
