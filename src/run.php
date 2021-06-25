@@ -2,13 +2,17 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-// D: si hablamos sobre los limones estamos ya muy cerca de la limonada, a lo mejor está fría, es decir, muy bien resfriada con el verano andaluz!
+// D: si hablamos sobre los limones estamos ya muy cerca de la limonada,
+// a lo mejor está fría, es decir, muy bien resfriada con el verano andaluz!
 // F: valee! pero no hablamos de programación? no me cuadra nada!
-// D: ay! es verdad, pero es cierto que desde una buena limonada en verano estamos ya muy cerca de esto! habia un buen libro sobre un musico muy famoso, que se mudó a sierra alpujarra a jubilarse
+// D: ay! es verdad, pero es cierto que desde una buena limonada en verano estamos
+// ya muy cerca de esto! habia un buen libro sobre un musico muy famoso, que se mudó a sierra alpujarra a jubilarse
 // F: (filis muestra la cara del libro con la pantalla ya compartida)
 // D: ay! este este, oye, tienes un parser de PHP y hacemos un par de funciones?
 // F: claroo! mira, ya incluso tenemos algunos capitulos del libro dentro de la memoria
-// D: perfe, pero antes de esto, creamos una clase Limon con una property, bueno, con dos! un esta limpio y esta pelado, y los dos booleans.
+
+// D: perfe, pero antes de esto, creamos una clase Limon con una property,
+// bueno, con dos! un esta limpio y esta pelado, y los dos booleans.
 
 class Limon
 {
@@ -225,3 +229,4 @@ class Limonada
         $this->hierbaBuena = $hierbaBuena;
     }
 }
+
